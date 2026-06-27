@@ -1,8 +1,7 @@
 name: CI
 
-# Corre en cada Pull Request hacia main
 on:
-  pull_request:
+  push:
     branches: [ labo05 ]
 
 jobs:
