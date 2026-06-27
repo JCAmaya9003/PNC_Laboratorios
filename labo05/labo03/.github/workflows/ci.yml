@@ -1,0 +1,56 @@
+name: CI
+
+# Corre en cada Pull Request hacia main
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar el repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Compilar y correr tests (Mockito)
+        run: ./mvnw -B verify
+
+      - name: Crear archivo .env para la prueba de humo
+        run: |
+          cat > .env <<EOF
+          POSTGRES_DB=labo05
+          POSTGRES_USER=hyrule_admin
+          POSTGRES_PASSWORD=test_password_ci
+          DB_URL=jdbc:postgresql://db:5432/labo05
+          DB_USER=hyrule_admin
+          DB_PASSWORD=test_password_ci
+          EOF
+
+      - name: Prueba de humo (levantar contenedores)
+        run: docker compose up --build -d
+
+      - name: Esperar y verificar el health con curl
+        run: |
+          echo "Esperando a que la app encienda..."
+          for i in $(seq 1 30); do
+            if curl -fs http://localhost:8080/actuator/health | grep -q '"status":"UP"'; then
+              echo "App encendida correctamente"
+              exit 0
+            fi
+            echo "Intento $i/30... esperando 5s"
+            sleep 5
+          done
+          echo "La app no encendio a tiempo. Logs:"
+          docker compose logs
+          exit 1
+
+      - name: Apagar contenedores
+        if: always()
+        run: docker compose down -v
