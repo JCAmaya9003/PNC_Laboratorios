@@ -3,7 +3,7 @@ name: CD
 # Corre cuando se hace push/merge a main
 on:
   push:
-    branches: [ main ]
+    branches: [ labo05 ]
 
 jobs:
   build-and-push:

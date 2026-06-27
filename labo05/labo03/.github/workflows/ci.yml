@@ -3,7 +3,7 @@ name: CI
 # Corre en cada Pull Request hacia main
 on:
   pull_request:
-    branches: [ main ]
+    branches: [ labo05 ]
 
 jobs:
   build-and-test:
